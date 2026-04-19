@@ -16,30 +16,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  create-envfile:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Make envfile
+      uses: SpicyPizza/create-envfile@v2.0
+      with:
+        envkey_VITE_ADMOB_APP_ID: ${{ secrets.VITE_ADMOB_APP_ID }}
+        envkey_VITE_ADMOB_BANNER_ID: ${{ secrets.VITE_ADMOB_BANNER_ID }}
+        envkey_VITE_ADMOB_INTERSTITIAL_ID: ${{ secrets.VITE_ADMOB_INTERSTITIAL_ID }}
+        file_name: .env
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-
       - name: Install dependencies
         run: npm ci
-
       - name: Type check
         run: npm run lint
-
       - name: Build project
         run: npm run build
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
