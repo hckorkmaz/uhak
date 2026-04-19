@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
   --font-display: "Outfit", sans-serif;
 
   --color-game-sky: #4EC0CA;
@@ -21,24 +21,69 @@ body {
   background-color: var(--color-game-sky);
   user-select: none;
   -webkit-touch-callout: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 canvas {
   display: block;
 }
 
+:root {
+  --ui-radius: 24px;
+  --ui-shadow: 0 6px 0 rgba(84, 56, 71, 0.22);
+}
+
 .vibrant-card {
   background: white;
   border: 8px solid var(--color-game-dark);
-  border-radius: 40px;
-  box-shadow: 0 20px 0 rgba(0,0,0,0.15);
+  border-radius: 32px;
+  box-shadow: 0 14px 0 rgba(84, 56, 71, 0.18);
 }
 
 .vibrant-title {
   color: var(--color-game-yellow);
-  text-shadow: 4px 4px 0 var(--color-game-dark), -4px -4px 0 var(--color-game-dark), 4px -4px 0 var(--color-game-dark), -4px 4px 0 var(--color-game-dark);
+  text-shadow:
+    0 2px 0 var(--color-game-dark),
+    2px 2px 0 var(--color-game-dark),
+    -2px 2px 0 var(--color-game-dark);
+}
+
+.ui-pill {
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+}
+
+.ui-pill-btn {
+  min-height: 56px;
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+}
+
+.ui-pill-badge {
+  min-height: 52px;
+  border-radius: var(--ui-radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .vibrant-btn-shadow {
-  box-shadow: 0 8px 0 rgba(0,0,0,0.2);
+  box-shadow: var(--ui-shadow);
+}
+
+@media (max-width: 640px) {
+  .vibrant-card {
+    border-width: 6px;
+    border-radius: 24px;
+    box-shadow: 0 10px 0 rgba(84, 56, 71, 0.16);
+  }
+
+  .vibrant-title {
+    text-shadow:
+      0 1px 0 var(--color-game-dark),
+      1px 1px 0 var(--color-game-dark),
+      -1px 1px 0 var(--color-game-dark);
+  }
 }

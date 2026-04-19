@@ -5,68 +5,172 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, RotateCcw, Play, Languages } from 'lucide-react';
-import { GameState, Language, Cloud } from './types';
+import { Trophy, RotateCcw } from 'lucide-react';
+import { GameState, Language, Cloud, GameMode, LevelConfig } from './types';
 import { 
   GRAVITY, 
   JUMP_STRENGTH, 
   CLOUD_SPEED, 
-  CLOUD_SPAWN_INTERVAL, 
   CLOUD_GAP, 
   BIRD_SIZE,
-  TRANSLATIONS 
+  TRANSLATIONS,
+  LEVELS 
 } from './constants';
 
 export default function App() {
+  const getDefaultLanguage = (): Language => {
+    if (typeof navigator === 'undefined') return 'en';
+
+    const locale = (navigator.language || '').toLowerCase();
+    return locale.startsWith('tr') ? 'tr' : 'en';
+  };
+
   const [gameState, setGameState] = useState<GameState>('START_MENU');
-  const [language, setLanguage] = useState<Language>('tr');
+  const [language, setLanguage] = useState<Language>(getDefaultLanguage);
+  const [gameMode, setGameMode] = useState<GameMode>('NORMAL');
+  const [currentLevel, setCurrentLevel] = useState(0);
   const [score, setScore] = useState(0);
-  const [bestScore, setBestScore] = useState(() => {
-    const saved = localStorage.getItem('uhak_best_score');
+  const [bestProgress, setBestProgress] = useState(() => {
+    const saved = localStorage.getItem('uhak_best_progress');
+
+    if (!saved) {
+      return { level: 1, score: 0 };
+    }
+
+    try {
+      const parsed = JSON.parse(saved);
+      return {
+        level: Number(parsed.level) || 1,
+        score: Number(parsed.score) || 0,
+      };
+    } catch {
+      return { level: 1, score: 0 };
+    }
+  });
+  const [freeBestScore, setFreeBestScore] = useState(() => {
+    const saved = localStorage.getItem('uhak_free_best_score');
     return saved ? parseInt(saved, 10) : 0;
   });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const dimensionsRef = useRef({ width: window.innerWidth, height: window.innerHeight });
 
   // Game Logic Refs
   const planeY = useRef(window.innerHeight * 0.4);
   const planeVelocity = useRef(0);
   const clouds = useRef<Cloud[]>([]);
   const lastCloudSpawnTime = useRef(0);
+  const lastFrameTime = useRef<number | null>(null);
+  const lastSpawnY = useRef<number | null>(null);
+  const scoreRef = useRef(0);
+  const isTransitioning = useRef(false);
   const animationFrameId = useRef<number>(0);
+  const activeLevelRef = useRef<LevelConfig>(LEVELS[0]);
 
   const t = TRANSLATIONS[language];
 
+  const getFreeModeLevel = useCallback((currentScore: number): LevelConfig => {
+    const freeModeLevelId = Math.floor(currentScore / 5) + 1;
+    const baseLevel = LEVELS[Math.min(freeModeLevelId - 1, LEVELS.length - 1)];
+    const extraDifficulty = Math.max(0, freeModeLevelId - LEVELS.length);
+
+    return {
+      ...baseLevel,
+      id: freeModeLevelId,
+      targetScore: freeModeLevelId * 5,
+      speedMultiplier: Math.min(1.8, baseLevel.speedMultiplier + extraDifficulty * 0.08),
+      spawnInterval: Math.max(650, baseLevel.spawnInterval - extraDifficulty * 70),
+      gapMultiplier: Math.max(0.82, baseLevel.gapMultiplier - extraDifficulty * 0.035),
+      patterns: extraDifficulty > 0 ? ['gentleRise', 'gentleDip', 'zigzag', 'zigzag'] : baseLevel.patterns,
+    };
+  }, []);
+
+  const activeLevel = gameMode === 'FREE'
+    ? getFreeModeLevel(score)
+    : (LEVELS[currentLevel] ?? LEVELS[0]);
+
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
+
+  useEffect(() => {
+    activeLevelRef.current = activeLevel;
+  }, [activeLevel]);
+
   const getResponsiveCloudConfig = useCallback(() => {
+    const currentDimensions = dimensionsRef.current;
     const viewportScale = Math.max(
       0.72,
-      Math.min(1.15, Math.min(dimensions.width / 1440, dimensions.height / 900) * 1.8)
+      Math.min(1.15, Math.min(currentDimensions.width / 1440, currentDimensions.height / 900) * 1.8)
     );
+
+    const currentLevelConfig = activeLevelRef.current;
 
     return {
       baseWidth: 72 * viewportScale,
       baseHeight: 104 * viewportScale,
-      gap: Math.max(170, Math.min(220, CLOUD_GAP * (0.95 + viewportScale * 0.15)))
+      gap: Math.max(170, Math.min(220, CLOUD_GAP * currentLevelConfig.gapMultiplier * (0.95 + viewportScale * 0.15)))
     };
-  }, [dimensions.height, dimensions.width]);
+  }, []);
 
   // Resize handler
   useEffect(() => {
     const handleResize = () => {
-      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      const nextDimensions = { width: window.innerWidth, height: window.innerHeight };
+      dimensionsRef.current = nextDimensions;
+      setDimensions(nextDimensions);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const resetGame = useCallback(() => {
-    planeY.current = dimensions.height * 0.4;
+    planeY.current = dimensionsRef.current.height * 0.4;
     planeVelocity.current = 0;
     clouds.current = [];
-    lastCloudSpawnTime.current = 0;
+    lastCloudSpawnTime.current = -Math.max(700, activeLevelRef.current.spawnInterval * 0.55);
+    lastFrameTime.current = null;
+    lastSpawnY.current = null;
+    scoreRef.current = 0;
+    isTransitioning.current = false;
     setScore(0);
-  }, [dimensions.height]);
+  }, []);
+
+  const startGame = useCallback((mode: GameMode = 'NORMAL') => {
+    setGameMode(mode);
+    setCurrentLevel(0);
+    setGameState('PLAYING');
+  }, []);
+
+  const returnToMenu = useCallback(() => {
+    isTransitioning.current = false;
+    setCurrentLevel(0);
+    setScore(0);
+    setGameState('START_MENU');
+  }, []);
+
+  const goToNextLevel = useCallback(() => {
+    setCurrentLevel(level => Math.min(level + 1, LEVELS.length - 1));
+    setGameState('PLAYING');
+  }, []);
+
+  const updateBestProgress = useCallback((level: number, finalScore: number) => {
+    setBestProgress(current => {
+      const shouldUpdate = level > current.level || (level === current.level && finalScore > current.score);
+      const next = shouldUpdate ? { level, score: finalScore } : current;
+      localStorage.setItem('uhak_best_progress', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const updateFreeBestScore = useCallback((finalScore: number) => {
+    setFreeBestScore(current => {
+      const next = Math.max(current, finalScore);
+      localStorage.setItem('uhak_free_best_score', next.toString());
+      return next;
+    });
+  }, []);
 
   const jump = useCallback(() => {
     if (gameState === 'PLAYING') {
@@ -79,14 +183,15 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         if (gameState === 'PLAYING') jump();
-        else if (gameState === 'START_MENU') setGameState('PLAYING');
-        else if (gameState === 'GAME_OVER') setGameState('PLAYING');
+        else if (gameState === 'LEVEL_COMPLETE') goToNextLevel();
+        else if (gameState === 'GAME_OVER' || gameState === 'WIN') startGame(gameMode);
+        else startGame('NORMAL');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, jump]);
+  }, [gameMode, gameState, goToNextLevel, jump, startGame]);
 
   useEffect(() => {
     if (gameState === 'PLAYING') {
@@ -99,29 +204,42 @@ export default function App() {
       animationFrameId.current = requestAnimationFrame(loop);
       return () => cancelAnimationFrame(animationFrameId.current);
     }
-  }, [gameState, dimensions, resetGame]);
+  }, [gameState, resetGame]);
+
+  useEffect(() => {
+    if (gameMode === 'NORMAL' && gameState === 'PLAYING' && !isTransitioning.current && score >= activeLevel.targetScore) {
+      handleLevelComplete(score);
+    }
+  }, [activeLevel.targetScore, gameMode, gameState, score]);
 
   const update = (time: number) => {
+    if (isTransitioning.current) return;
+
+    const currentLevelConfig = activeLevelRef.current;
+    const currentDimensions = dimensionsRef.current;
     const { gap: responsiveCloudGap } = getResponsiveCloudConfig();
+    const deltaTime = lastFrameTime.current === null ? 1000 / 60 : Math.min(time - lastFrameTime.current, 34);
+    const frameScale = deltaTime / (1000 / 60);
+    lastFrameTime.current = time;
 
     // Plane physics
-    planeVelocity.current += GRAVITY;
-    planeY.current += planeVelocity.current;
+    planeVelocity.current += GRAVITY * frameScale;
+    planeY.current += planeVelocity.current * frameScale;
 
     // Ground/Ceiling collision
-    if (planeY.current + BIRD_SIZE / 2 > dimensions.height * 0.85 || planeY.current - BIRD_SIZE / 2 < 0) {
+    if (planeY.current + BIRD_SIZE / 2 > currentDimensions.height * 0.85 || planeY.current - BIRD_SIZE / 2 < 0) {
       handleGameOver();
     }
 
     // Cloud spawning
-    if (time - lastCloudSpawnTime.current > CLOUD_SPAWN_INTERVAL) {
+    if (time - lastCloudSpawnTime.current > currentLevelConfig.spawnInterval) {
       spawnCloud();
       lastCloudSpawnTime.current = time;
     }
 
     // Cloud movement and collision
     clouds.current = clouds.current.filter(cloud => {
-      cloud.x -= CLOUD_SPEED;
+      cloud.x -= CLOUD_SPEED * currentLevelConfig.speedMultiplier * frameScale;
 
       const planeRect = getPlaneRect();
       const cloudWidth = cloud.width * 1.5;
@@ -140,7 +258,7 @@ export default function App() {
       // Scoring
       if (!cloud.passed && cloud.x + cloudWidth < 50) {
         cloud.passed = true;
-        setScore(s => s + 1);
+        setScore(currentScore => currentScore + 1);
       }
 
       return cloud.x + cloudWidth > 0;
@@ -195,20 +313,44 @@ export default function App() {
   };
 
   const spawnCloud = () => {
+    const currentLevelConfig = activeLevelRef.current;
     const { baseWidth, baseHeight, gap } = getResponsiveCloudConfig();
-    const scale = 0.7 + Math.random() * 0.6; // %70 - %130
+    const scale = 0.7 + Math.random() * 0.6;
     const cloudWidth = baseWidth * scale;
     const cloudHeight = baseHeight * scale;
-    const groundTop = dimensions.height * 0.85;
+    const groundTop = dimensionsRef.current.height * 0.85;
     const ceilingPadding = Math.max(20, cloudHeight * 0.2);
     const groundPadding = Math.max(24, cloudHeight * 0.3);
     const minY = gap / 2 + ceilingPadding;
     const maxY = Math.max(minY + 10, groundTop - gap / 2 - groundPadding);
-    const y = Math.random() * (maxY - minY) + minY;
+    const centerY = (minY + maxY) / 2;
+    const previousY = lastSpawnY.current ?? centerY;
+    const range = maxY - minY;
+    const pattern = currentLevelConfig.patterns[Math.floor(Math.random() * currentLevelConfig.patterns.length)];
+
+    let y = centerY;
+
+    switch (pattern) {
+      case 'steady':
+        y = previousY + (Math.random() - 0.5) * range * 0.18;
+        break;
+      case 'gentleRise':
+        y = previousY - range * 0.14 + (Math.random() - 0.5) * range * 0.08;
+        break;
+      case 'gentleDip':
+        y = previousY + range * 0.14 + (Math.random() - 0.5) * range * 0.08;
+        break;
+      case 'zigzag':
+        y = previousY < centerY ? previousY + range * 0.24 : previousY - range * 0.24;
+        break;
+    }
+
+    y = Math.max(minY, Math.min(maxY, y));
+    lastSpawnY.current = y;
 
     clouds.current.push({
       id: Date.now(),
-      x: dimensions.width,
+      x: dimensionsRef.current.width,
       y,
       width: cloudWidth,
       height: cloudHeight,
@@ -216,13 +358,32 @@ export default function App() {
     });
   };
 
+  const handleLevelComplete = (finalScore: number) => {
+    if (isTransitioning.current) return;
+
+    isTransitioning.current = true;
+    updateBestProgress(activeLevel.id, finalScore);
+
+    if (currentLevel >= LEVELS.length - 1) {
+      setGameState('WIN');
+      return;
+    }
+
+    setGameState('LEVEL_COMPLETE');
+  };
+
   const handleGameOver = () => {
+    if (isTransitioning.current) return;
+
+    isTransitioning.current = true;
     setGameState('GAME_OVER');
-    setBestScore(current => {
-      const newBest = Math.max(current, score);
-      localStorage.setItem('uhak_best_score', newBest.toString());
-      return newBest;
-    });
+
+    if (gameMode === 'FREE') {
+      updateFreeBestScore(scoreRef.current);
+      return;
+    }
+
+    updateBestProgress(activeLevel.id, scoreRef.current);
   };
 
   const draw = () => {
@@ -232,15 +393,17 @@ export default function App() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+    const currentDimensions = dimensionsRef.current;
+
+    ctx.clearRect(0, 0, currentDimensions.width, currentDimensions.height);
 
     // Draw Sky Background (Keep Vibrant Sky)
     ctx.fillStyle = '#4EC0CA';
-    ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+    ctx.fillRect(0, 0, currentDimensions.width, currentDimensions.height);
 
     // Draw Ground (Vibrant theme ground)
     ctx.fillStyle = '#ded895';
-    ctx.fillRect(0, dimensions.height * 0.85, dimensions.width, dimensions.height * 0.15);
+    ctx.fillRect(0, currentDimensions.height * 0.85, currentDimensions.width, currentDimensions.height * 0.15);
 
     // Draw Obstacles
     clouds.current.forEach(cloud => {
@@ -280,76 +443,45 @@ export default function App() {
   const drawTHYPlane = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
     ctx.save();
     ctx.translate(x, y);
-    
-    // Rotation based on velocity
-    const rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, planeVelocity.current * 0.05));
+
+    const rotation = Math.min(Math.PI / 9, Math.max(-Math.PI / 9, planeVelocity.current * 0.03));
     ctx.rotate(rotation);
 
-    const w = BIRD_SIZE * 2;
-    const h = BIRD_SIZE * 0.7;
+    const w = BIRD_SIZE * 1.95;
+    const h = BIRD_SIZE * 0.72;
 
-    // Cockpit & Main Body (White/Silver)
-    ctx.fillStyle = 'white';
     ctx.strokeStyle = '#543847';
-    ctx.lineWidth = 3;
-    
-    ctx.beginPath();
-    ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    ctx.lineWidth = 3.5;
 
-    // Red Tail
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.moveTo(-w * 0.3, -h * 0.1);
-    ctx.lineTo(-w * 0.4, -h * 0.8);
-    ctx.lineTo(-w * 0.1, -h * 0.8);
-    ctx.lineTo(-w * 0.1, -h * 0.1);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Tail Logo (Crescent shape)
+    // Menu-style white body
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(-w * 0.25, -h * 0.6, 6, 0.2, Math.PI * 1.8);
-    ctx.fill();
-
-    // Main Wings (Red)
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.moveTo(w * 0.1, 0);
-    ctx.lineTo(-w * 0.2, h * 0.8);
-    ctx.lineTo(w * 0.2, h * 0.8);
-    ctx.closePath();
+    ctx.roundRect(-w * 0.5, -h * 0.4, w, h * 0.8, h * 0.4);
     ctx.fill();
     ctx.stroke();
 
-    // Small Rear Wing (Red)
-    ctx.beginPath();
-    ctx.moveTo(-w * 0.2, h * 0.2);
-    ctx.lineTo(-w * 0.4, h * 0.5);
-    ctx.lineTo(-w * 0.2, h * 0.5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Engine under wing
-    ctx.fillStyle = '#94a3b8';
-    ctx.beginPath();
-    ctx.ellipse(w * 0.05, h * 0.7, 10, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Cockpit Window (Black)
+    // Cockpit on the top-right
     ctx.fillStyle = '#1e293b';
     ctx.beginPath();
-    ctx.moveTo(w * 0.3, -h * 0.2);
-    ctx.lineTo(w * 0.45, -h * 0.2);
-    ctx.lineTo(w * 0.42, 0);
-    ctx.lineTo(w * 0.25, 0);
+    ctx.roundRect(w * 0.17, -h * 0.16, w * 0.16, h * 0.3, 4);
+    ctx.fill();
+
+    // Red tail matching menu preview
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.34, -h * 0.08);
+    ctx.lineTo(-w * 0.42, -h * 1.02);
+    ctx.lineTo(-w * 0.14, -h * 1.02);
+    ctx.lineTo(-w * 0.06, -h * 0.08);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
+
+    // Main red wing under the body
+    ctx.beginPath();
+    ctx.ellipse(0, h * 0.48, w * 0.18, h * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
 
     ctx.restore();
   };
@@ -390,86 +522,146 @@ export default function App() {
                 </motion.div>
               </div>
 
-              <h1 className="text-4xl md:text-5xl font-black mb-10 tracking-tighter uppercase leading-tight italic vibrant-title transform -rotate-2 break-words px-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-8 tracking-tight uppercase leading-[1.05] vibrant-title md:-rotate-2 break-words px-2 sm:px-4">
                 {t.title}
               </h1>
               
-              <div className="flex gap-4 justify-center mb-8">
+              <div className="flex gap-3 justify-center mb-6 flex-wrap">
                 <button
                   onClick={(e) => { e.stopPropagation(); setLanguage('tr'); }}
-                  className={`px-6 py-2 rounded-2xl font-bold transition-all border-4 ${language === 'tr' ? 'border-[#F7D302] bg-[#F27D26] text-white shadow-[0_6px_0_rgba(84,56,71,0.25)]' : 'border-[#543847]/10 bg-[#fff7d6] text-[#8b6b46]'}`}
+                  className={`ui-pill min-w-18 px-5 py-2 font-bold transition-all border-4 text-sm sm:text-base ${language === 'tr' ? 'border-[#F7D302] bg-[#F27D26] text-white' : 'border-[#543847]/10 bg-[#fff7d6] text-[#8b6b46]'}`}
                 >
                   TR
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setLanguage('en'); }}
-                  className={`px-6 py-2 rounded-2xl font-bold transition-all border-4 ${language === 'en' ? 'border-[#F7D302] bg-[#F27D26] text-white shadow-[0_6px_0_rgba(84,56,71,0.25)]' : 'border-[#543847]/10 bg-[#fff7d6] text-[#8b6b46]'}`}
+                  className={`ui-pill min-w-18 px-5 py-2 font-bold transition-all border-4 text-sm sm:text-base ${language === 'en' ? 'border-[#F7D302] bg-[#F27D26] text-white' : 'border-[#543847]/10 bg-[#fff7d6] text-[#8b6b46]'}`}
                 >
                   EN
                 </button>
               </div>
 
-              <button
-                onClick={(e) => { e.stopPropagation(); setGameState('PLAYING'); }}
-                className="w-full py-5 bg-gradient-to-r from-[#F27D26] to-[#F7D302] text-[#543847] rounded-3xl font-black text-2xl uppercase tracking-wider vibrant-btn-shadow hover:scale-105 transition-transform active:scale-95 border-4 border-[#543847]"
-              >
-                {t.start}
-              </button>
-              
-              <p className="mt-8 text-[#543847] font-bold opacity-60">
+              <div className="space-y-3">
+                <button
+                  onClick={(e) => { e.stopPropagation(); startGame('NORMAL'); }}
+                  className="ui-pill w-full min-h-14 sm:min-h-16 px-4 py-4 bg-gradient-to-r from-[#F27D26] to-[#F7D302] text-[#543847] font-black text-lg sm:text-xl md:text-2xl uppercase tracking-wide leading-none vibrant-btn-shadow hover:scale-[1.02] transition-transform active:scale-95 border-4 border-[#543847]"
+                >
+                  {t.normalMode}
+                </button>
+
+                <button
+                  onClick={(e) => { e.stopPropagation(); startGame('FREE'); }}
+                  className="ui-pill w-full min-h-14 sm:min-h-16 px-4 py-4 bg-gradient-to-r from-[#4EC0CA] to-[#73BF2E] text-white font-black text-lg sm:text-xl md:text-2xl uppercase tracking-wide leading-none vibrant-btn-shadow hover:scale-[1.02] transition-transform active:scale-95 border-4 border-[#543847]"
+                >
+                  {t.freeMode}
+                </button>
+              </div>
+
+              <p className="mt-6 text-[#543847] font-bold opacity-60">
                 SPACE | TAP
               </p>
             </div>
           </motion.div>
         )}
 
-        {gameState === 'GAME_OVER' && (
+        {(gameState === 'GAME_OVER' || gameState === 'LEVEL_COMPLETE' || gameState === 'WIN') && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="absolute inset-0 flex items-center justify-center p-6 z-10 bg-black/30 backdrop-blur-md"
+            className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 z-10 bg-black/30 backdrop-blur-md"
           >
-            <div className="vibrant-card p-10 text-center max-w-sm w-full">
-              <div className="w-24 h-24 bg-[#F7D302] border-4 border-[#543847] rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
-                <Trophy className="w-12 h-12 text-[#543847]" />
+            <div className="vibrant-card p-6 sm:p-8 md:p-10 text-center max-w-sm w-full">
+              <div className={`w-20 h-20 sm:w-24 sm:h-24 border-4 border-[#543847] rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-xl ${gameState === 'GAME_OVER' ? 'bg-[#F7D302]' : 'bg-[#73BF2E]'}`}>
+                <Trophy className="w-10 h-10 sm:w-12 sm:h-12 text-[#543847]" />
               </div>
               
-              <h2 className="text-4xl font-black text-[#543847] mb-6 uppercase italic">{t.gameOver}</h2>
-              <div className="space-y-6 mb-10">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#543847] mb-3 sm:mb-4 uppercase leading-tight">
+                {gameState === 'GAME_OVER' ? t.gameOver : gameState === 'LEVEL_COMPLETE' ? t.levelComplete : t.win}
+              </h2>
+
+              {gameState === 'LEVEL_COMPLETE' && (
+                <p className="text-[#543847] font-semibold opacity-80 mb-5 sm:mb-6 text-sm sm:text-base">
+                  Hedef skora ulaştın. Yeni seviyeye hazırsın.
+                </p>
+              )}
+
+              <div className="space-y-4 sm:space-y-5 mb-8 sm:mb-10">
                 <div className="bg-gray-50 p-4 rounded-2xl border-4 border-[#543847]/10">
-                  <p className="text-[#543847] text-sm uppercase font-black opacity-40">{t.score}</p>
-                  <p className="text-6xl font-black text-[#73BF2E]">{score}</p>
+                  <p className="text-[#543847] text-xs sm:text-sm uppercase font-black opacity-40">{t.score}</p>
+                  <p className="text-4xl sm:text-5xl md:text-6xl font-black text-[#73BF2E]">{score}</p>
                 </div>
-                <div className="flex justify-between items-center px-4">
-                  <p className="text-[#543847] text-sm uppercase font-black opacity-40">{t.bestScore}</p>
-                  <p className="text-2xl font-black text-[#543847]">{bestScore}</p>
+                <div className="flex justify-between items-center px-2 sm:px-4 gap-4">
+                  <p className="text-[#543847] text-xs sm:text-sm uppercase font-black opacity-40">{t.level}</p>
+                  <p className="text-xl sm:text-2xl font-black text-[#543847]">{gameMode === 'FREE' ? '∞' : activeLevel.id}</p>
+                </div>
+                <div className="flex justify-between items-center px-2 sm:px-4 gap-4">
+                  <p className="text-[#543847] text-xs sm:text-sm uppercase font-black opacity-40">
+                    {gameMode === 'FREE' ? t.bestFreeScore : t.bestScore}
+                  </p>
+                  <p className="text-right text-sm sm:text-lg font-black text-[#543847]">
+                    {gameMode === 'FREE'
+                      ? freeBestScore
+                      : `${bestProgress.level}. ${t.level} • ${bestProgress.score}`}
+                  </p>
                 </div>
               </div>
 
-              <button
-                onClick={(e) => { e.stopPropagation(); setGameState('PLAYING'); }}
-                className="w-full py-5 bg-gradient-to-r from-[#73BF2E] to-[#4EC0CA] text-white rounded-3xl font-black text-2xl uppercase tracking-wider vibrant-btn-shadow hover:scale-105 transition-transform active:scale-95 border-4 border-[#543847]"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <RotateCcw className="w-8 h-8" strokeWidth={3} />
-                  {t.restart}
-                </div>
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (gameState === 'LEVEL_COMPLETE') goToNextLevel();
+                    else startGame(gameMode);
+                  }}
+                  className="ui-pill-btn w-full px-4 py-4 bg-gradient-to-r from-[#73BF2E] to-[#4EC0CA] text-white font-black text-base sm:text-xl uppercase tracking-wide leading-none vibrant-btn-shadow hover:scale-[1.02] transition-transform active:scale-95 border-4 border-[#543847]"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <RotateCcw className="w-5 h-5 sm:w-7 sm:h-7" strokeWidth={3} />
+                    {gameState === 'LEVEL_COMPLETE' ? t.nextLevel : t.restart}
+                  </div>
+                </button>
+
+                {gameState === 'GAME_OVER' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      returnToMenu();
+                    }}
+                    className="ui-pill-btn w-full px-4 py-4 bg-white text-[#543847] font-black text-sm sm:text-base uppercase tracking-wide leading-none border-4 border-[#543847] hover:scale-[1.02] transition-transform active:scale-95"
+                  >
+                    {t.backToMenu}
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {(gameState === 'PLAYING') && (
-        <div className="absolute top-10 left-0 w-full flex justify-center pointer-events-none z-10">
-          <motion.div 
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-white border-4 border-[#543847] px-8 py-3 rounded-3xl shadow-[0_8px_0_rgba(0,0,0,0.1)]"
-          >
-            <span className="text-5xl font-black text-[#73BF2E] vibrant-title">{score}</span>
-          </motion.div>
+        <div className="absolute top-4 sm:top-6 left-0 w-full flex justify-center pointer-events-none z-10 px-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <motion.div 
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="ui-pill-badge bg-white border-4 border-[#543847] px-4 sm:px-5 py-2 shadow-[0_6px_0_rgba(0,0,0,0.1)]"
+            >
+              <span className="text-sm sm:text-lg font-black text-[#543847] whitespace-nowrap">
+                {gameMode === 'FREE' ? `∞ ${t.freeMode}` : `${t.level} ${activeLevel.id}`}
+              </span>
+            </motion.div>
+            <motion.div 
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="ui-pill-badge bg-white border-4 border-[#543847] px-4 sm:px-6 py-2 shadow-[0_6px_0_rgba(0,0,0,0.1)]"
+            >
+              <span className="text-2xl sm:text-3xl font-black text-[#73BF2E] vibrant-title">{score}</span>
+              {gameMode !== 'FREE' && (
+                <span className="ml-2 text-xs sm:text-sm font-black text-[#543847] opacity-70 whitespace-nowrap">/ {activeLevel.targetScore}</span>
+              )}
+            </motion.div>
+          </div>
         </div>
       )}
     </div>
