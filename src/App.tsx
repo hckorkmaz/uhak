@@ -70,6 +70,30 @@ export default function App() {
 
   const t = TRANSLATIONS[language];
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const localizedDescription = language === 'tr'
+      ? 'UHAK - Bulutların Ötesinde, mobil ve masaüstünde çalışan eğlenceli bir uçak arcade oyunu.'
+      : 'UHAK - Beyond the Clouds, a fun airplane arcade game for mobile and desktop.';
+
+    document.title = t.title;
+    document.documentElement.lang = language;
+
+    const setMetaContent = (selector: string, content: string) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.setAttribute('content', content);
+      }
+    };
+
+    setMetaContent('meta[name="description"]', localizedDescription);
+    setMetaContent('meta[property="og:title"]', t.title);
+    setMetaContent('meta[property="og:description"]', localizedDescription);
+    setMetaContent('meta[name="twitter:title"]', t.title);
+    setMetaContent('meta[name="twitter:description"]', localizedDescription);
+  }, [language, t.title]);
+
   const getFreeModeLevel = useCallback((currentScore: number): LevelConfig => {
     const freeModeLevelId = Math.floor(currentScore / 5) + 1;
     const baseLevel = LEVELS[Math.min(freeModeLevelId - 1, LEVELS.length - 1)];

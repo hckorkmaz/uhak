@@ -1,0 +1,17 @@
+{
+  "name": "UHAK",
+  "short_name": "UHAK",
+  "description": "A colorful airplane-themed arcade game for browser, mobile, and desktop players.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#4EC0CA",
+  "theme_color": "#4EC0CA",
+  "icons": [
+    {
+      "src": "./plane-favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
