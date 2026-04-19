@@ -38,6 +38,19 @@ export default function App() {
 
   const t = TRANSLATIONS[language];
 
+  const getResponsiveCloudConfig = useCallback(() => {
+    const viewportScale = Math.max(
+      0.72,
+      Math.min(1.15, Math.min(dimensions.width / 1440, dimensions.height / 900) * 1.8)
+    );
+
+    return {
+      baseWidth: 72 * viewportScale,
+      baseHeight: 104 * viewportScale,
+      gap: Math.max(170, Math.min(220, CLOUD_GAP * (0.95 + viewportScale * 0.15)))
+    };
+  }, [dimensions.height, dimensions.width]);
+
   // Resize handler
   useEffect(() => {
     const handleResize = () => {
@@ -89,6 +102,8 @@ export default function App() {
   }, [gameState, dimensions, resetGame]);
 
   const update = (time: number) => {
+    const { gap: responsiveCloudGap } = getResponsiveCloudConfig();
+
     // Plane physics
     planeVelocity.current += GRAVITY;
     planeY.current += planeVelocity.current;
@@ -111,8 +126,8 @@ export default function App() {
       const planeRect = getPlaneRect();
       const cloudWidth = cloud.width * 1.5;
       const cloudHeight = cloud.height;
-      const topCloudY = cloud.y - CLOUD_GAP / 2 - cloudHeight;
-      const bottomCloudY = cloud.y + CLOUD_GAP / 2;
+      const topCloudY = cloud.y - responsiveCloudGap / 2 - cloudHeight;
+      const bottomCloudY = cloud.y + responsiveCloudGap / 2;
       const cloudRects = [
         ...getCloudCollisionRects(cloud.x, topCloudY, cloudWidth, cloudHeight),
         ...getCloudCollisionRects(cloud.x, bottomCloudY, cloudWidth, cloudHeight)
@@ -180,12 +195,15 @@ export default function App() {
   };
 
   const spawnCloud = () => {
+    const { baseWidth, baseHeight, gap } = getResponsiveCloudConfig();
     const scale = 0.7 + Math.random() * 0.6; // %70 - %130
-    const cloudWidth = 80 * scale;
-    const cloudHeight = 120 * scale;
-    const safePadding = 110;
-    const minY = safePadding;
-    const maxY = dimensions.height * 0.85 - safePadding;
+    const cloudWidth = baseWidth * scale;
+    const cloudHeight = baseHeight * scale;
+    const groundTop = dimensions.height * 0.85;
+    const ceilingPadding = Math.max(20, cloudHeight * 0.2);
+    const groundPadding = Math.max(24, cloudHeight * 0.3);
+    const minY = gap / 2 + ceilingPadding;
+    const maxY = Math.max(minY + 10, groundTop - gap / 2 - groundPadding);
     const y = Math.random() * (maxY - minY) + minY;
 
     clouds.current.push({
@@ -208,6 +226,7 @@ export default function App() {
   };
 
   const draw = () => {
+    const { gap: responsiveCloudGap } = getResponsiveCloudConfig();
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -225,8 +244,8 @@ export default function App() {
 
     // Draw Obstacles
     clouds.current.forEach(cloud => {
-      drawPuffyCloud(ctx, cloud.x, cloud.y - CLOUD_GAP / 2 - cloud.height, cloud.width * 1.5, cloud.height, true);
-      drawPuffyCloud(ctx, cloud.x, cloud.y + CLOUD_GAP / 2, cloud.width * 1.5, cloud.height, false);
+      drawPuffyCloud(ctx, cloud.x, cloud.y - responsiveCloudGap / 2 - cloud.height, cloud.width * 1.5, cloud.height, true);
+      drawPuffyCloud(ctx, cloud.x, cloud.y + responsiveCloudGap / 2, cloud.width * 1.5, cloud.height, false);
     });
 
     // Draw Plane (Match THY Image)
