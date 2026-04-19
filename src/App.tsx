@@ -138,6 +138,11 @@ export default function App() {
     };
   }, []);
 
+  const getPlaneX = useCallback(() => {
+    const { width } = dimensionsRef.current;
+    return Math.max(50, Math.min(140, width * 0.1));
+  }, []);
+
   // Resize handler
   useEffect(() => {
     const handleResize = () => {
@@ -280,7 +285,7 @@ export default function App() {
       }
 
       // Scoring
-      if (!cloud.passed && cloud.x + cloudWidth < 50) {
+      if (!cloud.passed && cloud.x + cloudWidth < getPlaneX()) {
         cloud.passed = true;
         setScore(currentScore => currentScore + 1);
       }
@@ -303,12 +308,16 @@ export default function App() {
     ry: number;
   };
 
-  const getPlaneRect = (): Rect => ({
-    left: 50 - BIRD_SIZE * 0.8,
-    right: 50 + BIRD_SIZE * 0.9,
-    top: planeY.current - BIRD_SIZE * 0.32,
-    bottom: planeY.current + BIRD_SIZE * 0.32
-  });
+  const getPlaneRect = (): Rect => {
+    const planeX = getPlaneX();
+
+    return {
+      left: planeX - BIRD_SIZE * 0.8,
+      right: planeX + BIRD_SIZE * 0.9,
+      top: planeY.current - BIRD_SIZE * 0.32,
+      bottom: planeY.current + BIRD_SIZE * 0.32
+    };
+  };
 
   const getCloudPuffs = (x: number, y: number, w: number, h: number): Puff[] => ([
     { cx: x + w * 0.15, cy: y + h * 0.5, rx: h * 0.45, ry: h * 0.35 },
@@ -420,14 +429,8 @@ export default function App() {
     const currentDimensions = dimensionsRef.current;
 
     ctx.clearRect(0, 0, currentDimensions.width, currentDimensions.height);
-
-    // Draw Sky Background (Keep Vibrant Sky)
-    ctx.fillStyle = '#4EC0CA';
-    ctx.fillRect(0, 0, currentDimensions.width, currentDimensions.height);
-
-    // Draw Ground (Vibrant theme ground)
-    ctx.fillStyle = '#ded895';
-    ctx.fillRect(0, currentDimensions.height * 0.85, currentDimensions.width, currentDimensions.height * 0.15);
+    drawSkyBackdrop(ctx, currentDimensions.width, currentDimensions.height);
+    drawGroundBackdrop(ctx, currentDimensions.width, currentDimensions.height);
 
     // Draw Obstacles
     clouds.current.forEach(cloud => {
@@ -436,7 +439,72 @@ export default function App() {
     });
 
     // Draw Plane (Match THY Image)
-    drawTHYPlane(ctx, 50, planeY.current);
+    drawTHYPlane(ctx, getPlaneX(), planeY.current);
+  };
+
+  const drawSkyBackdrop = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const horizonY = height * 0.85;
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, horizonY);
+    skyGradient.addColorStop(0, '#BDEFFF');
+    skyGradient.addColorStop(0.28, '#8FE0FF');
+    skyGradient.addColorStop(0.6, '#63CBEF');
+    skyGradient.addColorStop(1, '#3FA8D4');
+
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, width, horizonY);
+
+    const sunSize = Math.max(40, Math.min(68, width * 0.06));
+    const sunX = width * 0.76;
+    const sunY = height * 0.11;
+    const sunRadius = sunSize / 2;
+
+    ctx.fillStyle = 'rgba(255,248,201,0.25)';
+    ctx.beginPath();
+    ctx.arc(sunX + sunRadius, sunY + sunRadius, sunRadius + 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#F7D302';
+    ctx.beginPath();
+    ctx.arc(sunX + sunRadius, sunY + sunRadius, sunRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    const softClouds = [
+      { x: width * 0.12, y: height * 0.16, w: 86, h: 20 },
+      { x: width * 0.42, y: height * 0.22, w: 68, h: 16 },
+      { x: width * 0.7, y: height * 0.17, w: 78, h: 18 }
+    ];
+
+    softClouds.forEach(({ x, y, w, h }) => {
+      ctx.fillStyle = 'rgba(255,255,255,0.32)';
+      ctx.fillRect(x, y, w, h);
+      ctx.fillRect(x + 10, y - 6, w * 0.55, h);
+    });
+  };
+
+  const drawGroundBackdrop = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const groundTop = height * 0.85;
+    const groundHeight = height - groundTop;
+
+    const seaGradient = ctx.createLinearGradient(0, groundTop, 0, height);
+    seaGradient.addColorStop(0, '#3FAFD8');
+    seaGradient.addColorStop(0.45, '#2B93BF');
+    seaGradient.addColorStop(1, '#17698F');
+
+    ctx.fillStyle = seaGradient;
+    ctx.fillRect(0, groundTop, width, groundHeight);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.34)';
+    for (let y = groundTop + 10; y < height - 8; y += 14) {
+      for (let x = ((y * 7) % 40); x < width; x += 54) {
+        ctx.fillRect(x, y, 16, 3);
+        if ((x / 54) % 2 === 0) {
+          ctx.fillRect(x + 20, y + 5, 10, 2);
+        }
+      }
+    }
+
+    ctx.fillStyle = '#E8D8A8';
+    ctx.fillRect(0, groundTop, width, 5);
   };
 
   const drawPuffyCloud = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, isTop: boolean) => {
@@ -525,7 +593,7 @@ export default function App() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute inset-0 flex items-center justify-center p-6 z-10 bg-black/10 backdrop-blur-sm"
+            className="absolute inset-0 flex items-center justify-center p-6 z-10 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.24),_rgba(78,192,202,0.28),_rgba(242,125,38,0.18))] backdrop-blur-sm"
           >
             <div className="vibrant-card p-6 md:p-10 text-center max-w-lg w-full">
               {/* Plane Preview (Replaced bird/duck) */}
