@@ -11,8 +11,8 @@
     "ios": "expo run:ios",
     "ios:run": "expo run:ios",
     "web": "expo start --web",
-    "build": "expo export --platform web",
-    "build:web": "expo export --platform web",
+    "build": "expo export --platform web && node tools/fix-web-build-paths.mjs",
+    "build:web": "expo export --platform web && node tools/fix-web-build-paths.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
