@@ -1,7 +1,6 @@
 export type Language = 'tr' | 'en';
 export type GameMode = 'NORMAL' | 'FREE';
-
-export type GameState = 'START_MENU' | 'PLAYING' | 'LEVEL_COMPLETE' | 'WIN' | 'GAME_OVER';
+export type GameState = 'SPLASH' | 'START_MENU' | 'PLAYING' | 'LEVEL_COMPLETE' | 'WIN' | 'GAME_OVER';
 export type CloudPattern = 'steady' | 'gentleRise' | 'gentleDip' | 'zigzag';
 
 export interface Point {
@@ -29,6 +28,7 @@ export interface LevelConfig {
 
 export interface Translations {
   title: string;
+  subtitle: string;
   start: string;
   gameOver: string;
   score: string;
@@ -44,4 +44,5 @@ export interface Translations {
   normalMode: string;
   freeMode: string;
   freeModeHint: string;
+  tapToFly: string;
 }

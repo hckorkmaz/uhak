@@ -1,65 +1,61 @@
 # UHAK: Bulutların Ötesinde
 
-UHAK, tarayıcıda çalışan, uçak temalı, çocuk dostu bir arcade oyunudur. Oyun hem masaüstü hem de mobil cihazlarda akıcı çalışacak şekilde tasarlanmıştır.
+UHAK artık tek bir Expo tabanlı React Native uygulaması olarak web, Android ve iOS için çalışır.
+
+## Mimari
+
+- Expo ve React Native tek uygulama katmanı olarak kullanılır.
+- Web desteği Expo Web üzerinden sağlanır.
+- Oyun mantığı ve arayüz tek Expo uygulaması içinde tutulur.
+- Platform bağımsız mantık src/game altında yer alır.
 
 ## Özellikler
 
 - Seviyeli oyun modu
 - Serbest mod ve sonsuz ilerleme
 - Türkçe ve İngilizce dil desteği
-- Mobil uyumlu arayüz
-- Skor ve ilerleme kaydı
-- GitHub Pages ile otomatik deploy desteği
+- Dokunmatik odaklı doğal mobil deneyim
+- Web ve mobilde ortak oyun mantığı
+- Yerel depolama ile skor ve ilerleme kaydı
 
 ## Teknolojiler
 
-- React
+- Expo
+- React Native
+- React Native Web
 - TypeScript
-- Vite
-- Tailwind CSS
-- Motion
+- AsyncStorage
 
 ## Yerel geliştirme
 
-**Gereksinim:** Node.js 18+
+Gereksinim: Node.js 18+
 
-1. Bağımlılıkları yükleyin:
-
-   npm install
-
-2. Geliştirme sunucusunu başlatın:
+1. Kökten mobil geliştirme sunucusu:
 
    npm run dev
 
-3. Tip kontrolü çalıştırın:
+2. Android:
 
-   npm run lint
+   npm run android
 
-4. Production build alın:
+3. iOS:
 
-   npm run build
+   npm run ios
 
-5. Build çıktısını önizleyin:
+4. Web:
 
-   npm run preview
+   npm run web
 
-## Oynanış
+5. Tip kontrolü:
 
-- Boşluk tuşu veya ekrana dokunarak uçağı yükseltin.
-- Bulutlara ve sınırlara çarpmadan ilerleyin.
-- Seviyeli modda hedef skora ulaşarak yeni seviyelerin kilidini açın.
-- Serbest modda mümkün olduğunca uzun süre hayatta kalın.
-
-## Deploy
-
-Proje, main branch üzerine gönderilen güncellemelerde otomatik olarak build alacak şekilde yapılandırılmıştır.
+   npm run typecheck
 
 ## Proje yapısı
 
-- src/App.tsx: ana oyun akışı ve arayüz
-- src/constants.ts: seviyeler, çeviriler ve sabitler
-- src/types.ts: ortak TypeScript tipleri
+- src/game: oyun kuralları, tipler ve sabitler
+- App.tsx: ana React Native oyun ekranı
+- package.json: Expo komutları ve bağımlılıklar
 
 ## Not
 
-Bu proje eğlenceli, hafif ve hızlı açılan bir web oyunu deneyimi sunmak için optimize edilmiştir.
+Bu depo artık Vite tabanlı eski web uygulamasını değil, React Native merkezli çapraz platform uygulamayı esas alır.

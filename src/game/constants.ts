@@ -3,8 +3,8 @@ import { LevelConfig, Translations } from './types';
 export const GRAVITY = 0.225;
 export const JUMP_STRENGTH = -8;
 export const CLOUD_SPEED = 3.5;
-export const CLOUD_SPAWN_INTERVAL = 1500; // ms
-export const CLOUD_GAP = 180;
+export const CLOUD_SPAWN_INTERVAL = 1500;
+export const CLOUD_GAP = 216;
 export const BIRD_SIZE = 40;
 
 export const LEVELS: LevelConfig[] = [
@@ -13,30 +13,31 @@ export const LEVELS: LevelConfig[] = [
     targetScore: 5,
     speedMultiplier: 0.82,
     spawnInterval: CLOUD_SPAWN_INTERVAL + 350,
-    gapMultiplier: 1.12,
-    patterns: ['steady', 'steady', 'gentleRise', 'gentleDip']
+    gapMultiplier: 1.05,
+    patterns: ['steady', 'steady', 'gentleRise', 'gentleDip'],
   },
   {
     id: 2,
     targetScore: 9,
     speedMultiplier: 0.95,
     spawnInterval: CLOUD_SPAWN_INTERVAL + 100,
-    gapMultiplier: 1.02,
-    patterns: ['steady', 'gentleRise', 'gentleDip', 'zigzag']
+    gapMultiplier: 0.92,
+    patterns: ['steady', 'gentleRise', 'gentleDip', 'zigzag'],
   },
   {
     id: 3,
     targetScore: 14,
     speedMultiplier: 1.08,
     spawnInterval: CLOUD_SPAWN_INTERVAL - 100,
-    gapMultiplier: 0.94,
-    patterns: ['gentleRise', 'gentleDip', 'zigzag', 'zigzag']
-  }
+    gapMultiplier: 0.78,
+    patterns: ['gentleRise', 'gentleDip', 'zigzag', 'zigzag'],
+  },
 ];
 
 export const TRANSLATIONS: Record<'tr' | 'en', Translations> = {
   tr: {
     title: 'UHAK: Bulutların Ötesinde',
+    subtitle: 'Tam React Native sürümü',
     start: 'Uçuşu Başlat',
     gameOver: 'Bu Kez Olmadı, Tekrar Dene!',
     score: 'Skor',
@@ -51,10 +52,12 @@ export const TRANSLATIONS: Record<'tr' | 'en', Translations> = {
     win: 'Harika! Tüm Seviyeler Bitti',
     normalMode: 'Seviyeli Mod',
     freeMode: 'Serbest Mod',
-    freeModeHint: 'Sonsuz uçuş, otomatik seviye artışı'
+    freeModeHint: 'Sonsuz uçuş, otomatik seviye artışı',
+    tapToFly: 'Uçmak için dokun',
   },
   en: {
     title: 'UHAK: Beyond the Clouds',
+    subtitle: 'Full React Native edition',
     start: 'Start Flight',
     gameOver: 'Nice Try, Let’s Go Again!',
     score: 'Score',
@@ -69,6 +72,7 @@ export const TRANSLATIONS: Record<'tr' | 'en', Translations> = {
     win: 'Amazing! All Levels Done',
     normalMode: 'Level Mode',
     freeMode: 'Free Mode',
-    freeModeHint: 'Endless flight with auto level-up'
-  }
+    freeModeHint: 'Endless flight with auto level-up',
+    tapToFly: 'Tap to fly',
+  },
 };
