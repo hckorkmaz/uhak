@@ -133,6 +133,8 @@ export default function App() {
 
   const goToNextLevel = useCallback(() => {
     isTransitioning.current = false;
+    scoreRef.current = 0;
+    setScore(0);
     setCurrentLevel((level) => Math.min(level + 1, LEVELS.length - 1));
     setGameState('PLAYING');
   }, []);
