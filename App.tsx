@@ -25,7 +25,6 @@ import {
   createCloud,
   getCloudCollisionRects,
   getDefaultLanguage,
-  getFreeModeLevel,
   getPlaneRect,
   getPlaneX,
   getResponsiveCloudConfig,
@@ -64,7 +63,7 @@ export default function App() {
   const activeLevelRef = useRef<LevelConfig>(LEVELS[0]);
 
   const t = TRANSLATIONS[language];
-  const activeLevel = gameMode === 'FREE' ? getFreeModeLevel(score) : (LEVELS[currentLevel] ?? LEVELS[0]);
+  const activeLevel = gameMode === 'FREE' ? LEVELS[0] : (LEVELS[currentLevel] ?? LEVELS[0]);
   const responsiveConfig = useMemo(() => getResponsiveCloudConfig(dimensions, activeLevel), [activeLevel, dimensions]);
   const [fontsLoaded] = useFonts({
     VT323: VT323_400Regular,
