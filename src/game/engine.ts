@@ -63,13 +63,15 @@ export const getResponsiveCloudConfig = (
   const aspectRatio = dimensions.width / Math.max(dimensions.height, 1);
   const portraitTightness = Math.max(0, Math.min(1, (0.98 - aspectRatio) / 0.5));
 
+  const maxGap = CLOUD_GAP * activeLevel.maxGapMultiplier;
+
   return {
     baseWidth: 72 * viewportScale * (1 + portraitTightness * 0.08),
     baseHeight: 104 * viewportScale,
     gap: Math.max(
       132,
       Math.min(
-        205,
+        maxGap,
         CLOUD_GAP * activeLevel.gapMultiplier * (0.95 + viewportScale * 0.15) * (1 - portraitTightness * 0.28),
       ),
     ),
@@ -141,10 +143,11 @@ export const createCloud = ({
   const cloudWidth = baseWidth * scale;
   const cloudHeight = baseHeight * scale;
   const groundTop = dimensions.height * groundRatio;
-  const ceilingPadding = Math.max(20, cloudHeight * 0.2);
+  const topPadding = Math.max(10, cloudHeight * 0.08);
   const minGroundClearance = dimensions.height * 0.15;
   const groundPadding = Math.max(minGroundClearance, cloudHeight * 0.3);
-  const minY = gap / 2 + ceilingPadding;
+  // Keep the top obstacle fully inside the viewport (no overflow above y=0).
+  const minY = gap / 2 + cloudHeight + topPadding;
   const maxY = Math.max(minY + 10, groundTop - gap / 2 - groundPadding);
   const centerY = (minY + maxY) / 2;
   const previousY = lastSpawnY ?? centerY;

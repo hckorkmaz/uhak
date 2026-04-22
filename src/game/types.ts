@@ -23,6 +23,8 @@ export interface LevelConfig {
   speedMultiplier: number;
   spawnInterval: number;
   gapMultiplier: number;
+  /** Gap hesabı üst tavanı: CLOUD_GAP ile çarpılır. Yüksek = daha geniş izin. */
+  maxGapMultiplier: number;
   patterns: CloudPattern[];
 }
 
