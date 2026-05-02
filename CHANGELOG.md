@@ -2,63 +2,63 @@
 
 ## v1.0.1
 
-## Genel bakış
+## Overview
 
-v1.0.1, oynanış akışını daha kararlı hale getiren ve görsel engel tasarımlarını iyileştiren bakım sürümüdür.
+v1.0.1 is a maintenance release that stabilizes gameplay flow and improves visual obstacle design.
 
-## Öne çıkan yenilikler
+## Highlights
 
-- Seviye geçişinde skor sıfırlama akışı düzeltildi; Seviye 1 sonrası Seviye 2'nin anında tamamlanması giderildi
-- Serbest mod zorluk davranışı sabitlendi; skor arttıkça otomatik zorluk değişimi kapatıldı
-- Bulut üretiminde üst sınır taşması engellendi; engeller artık ekranın üstüne çıkmıyor
-- Seviye 1 bulut aralığı genişletilerek başlangıç deneyimi kolaylaştırıldı
-- Bulut engel piksel-art tasarımı güncellendi; şimşekler bulut içinde ve daha okunabilir şekilde yeniden işlendi
-- Uçak sprite tasarımı gerçek uçak silüetine daha yakın olacak şekilde rafine edildi
+- Fixed score reset flow during level transitions; resolved the issue where Level 2 could complete instantly after Level 1
+- Stabilized Free Mode difficulty behavior; disabled automatic difficulty shifts based on score growth
+- Prevented upper-bound overflow in cloud generation; obstacles no longer extend beyond the top of the screen
+- Increased Level 1 cloud gaps to make the early game easier
+- Updated cloud obstacle pixel-art design; lightning visuals were reworked to sit inside clouds and be more readable
+- Refined airplane sprite design to better match a real airplane silhouette
 
-## Teknik içerik
+## Technical Details
 
-- `LevelConfig` yapısına `maxGapMultiplier` parametresi eklendi ve gap tavanı seviyelerden parametrik yönetilir hale getirildi
-- Çarpışma/engel üretim akışında üst sınır güvenliği artırıldı
-- Görsel sprite gridleri yeniden düzenlendi ve assets yeniden üretildi
+- Added the `maxGapMultiplier` parameter to `LevelConfig`, making gap caps parametrically configurable per level
+- Improved upper-bound safety in collision and obstacle generation flow
+- Reorganized visual sprite grids and regenerated assets
 
-## Sürüm etiketi
+## Release Metadata
 
 - Release version: v1.0.1
 - Release branch: release/v1.0.1
 
 ## v1.0.0
 
-## Genel bakış
+## Overview
 
-v1.0.0, UHAK oyununun ilk kararlı çapraz platform sürümüdür. Bu sürümle birlikte proje, Expo tabanlı tek bir React Native mimarisi altında web ve Android odaklı modern bir yapıya taşınmıştır.
+v1.0.0 is the first stable cross-platform release of UHAK. With this release, the project moved to a modern web-and-Android focused structure under a single Expo-based React Native architecture.
 
-## Öne çıkan yenilikler
+## Highlights
 
-- Expo ve React Native tabanlı birleşik uygulama yapısı
-- Web ve mobilde ortak oyun mantığı
-- Piksel-art temalı yenilenmiş görsel tasarım
-- Uçak, bulut, arka plan ve menülerde bütünlüklü sanat yönü
-- Daha dengeli engel boşlukları ve akıcı oyun temposu
-- Türkçe ve İngilizce dil desteği
-- Yerel skor ve ilerleme kaydı
-- Android çalışma desteği ve yerel proje altyapısı
+- Unified app architecture based on Expo and React Native
+- Shared game logic across web and mobile
+- Refreshed visual design with a pixel-art theme
+- Cohesive art direction across airplane, clouds, background, and menus
+- More balanced obstacle gaps and smoother gameplay pacing
+- Turkish and English language support
+- Local score and progress persistence
+- Android runtime support and native project infrastructure
 
-## Teknik içerik
+## Technical Details
 
 - Expo 54
-- React 19 ve React Native 0.81
-- React Native Web desteği
-- TypeScript tabanlı kod yapısı
-- AsyncStorage ile veri kalıcılığı
-- Web export ve statik dağıtım hazırlığı
+- React 19 and React Native 0.81
+- React Native Web support
+- TypeScript-based codebase
+- Data persistence with AsyncStorage
+- Web export and static deployment preparation
 
-## Bu sürüm kimler için
+## Who This Release Is For
 
-- Tarayıcıda hızlı arcade deneyimi isteyen oyuncular
-- Android cihazda yerel uygulama kurulumu isteyen kullanıcılar
-- Tek kod tabanından çoklu platform hedefleyen geliştirme yaklaşımı arayan ekipler
+- Players who want a fast arcade experience in the browser
+- Users who want native installation on Android devices
+- Teams looking for a multi-platform development approach from a single codebase
 
-## Sürüm etiketi
+## Release Metadata
 
 - Release version: v1.0.0
 - Release branch: release/v1.0.0
