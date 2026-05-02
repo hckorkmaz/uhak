@@ -2,19 +2,26 @@
 	<img src="./assets/icon.png" alt="UHAK icon" width="120" />
 </p>
 
-# UHAK: Beyond the Clouds
+<h1 align="center">UHAK: Beyond the Clouds</h1>
 
 <p align="center">
-	<img src="https://img.shields.io/badge/Expo-55-111111?style=for-the-badge&logo=expo&logoColor=white" alt="Expo 55" />
-	<img src="https://img.shields.io/badge/React_Native-0.83-20232a?style=for-the-badge&logo=react&logoColor=61dafb" alt="React Native 0.83" />
-	<img src="https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iOS-2f7cf6?style=for-the-badge" alt="Platforms" />
+	<a href="https://github.com/hckorkmaz/uhak/releases/latest">
+		<img src="https://img.shields.io/github/v/release/hckorkmaz/uhak?style=flat&label=release&color=2ea44f&labelColor=24292f" alt="Latest release" />
+	</a>
+	<a href="https://github.com/hckorkmaz/uhak/releases">
+		<img src="https://img.shields.io/github/downloads/hckorkmaz/uhak/total?style=flat&label=downloads&color=2188ff&labelColor=24292f" alt="Downloads" />
+	</a>
+	<a href="https://github.com/hckorkmaz/uhak/commits/main">
+		<img src="https://img.shields.io/github/last-commit/hckorkmaz/uhak?style=flat&label=last%20update&color=6f42c1&labelColor=24292f" alt="Last update" />
+	</a>
+</p>
+
+<p align="center">
+	<img src="https://img.shields.io/badge/platform-web%20%7C%20android%20%7C%20ios-2188ff?style=flat&labelColor=24292f" alt="Platforms" />
+	<img src="https://img.shields.io/badge/built%20with-Expo%2055-444444?style=flat&labelColor=24292f&logo=expo&logoColor=white" alt="Built with Expo 55" />
 </p>
 
 UHAK is a pixel-art arcade flight game focused on reflexes and timing. The project runs as a single Expo-based React Native app across web, Android, and iOS.
-
-<p align="center">
-	<img src="./assets/splash-icon.png" alt="UHAK splash art" width="220" />
-</p>
 
 ## Game Overview
 
