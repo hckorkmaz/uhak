@@ -1,5 +1,31 @@
 # UHAK CHANGELOG
 
+## v1.0.1
+
+## Genel bakış
+
+v1.0.1, oynanış akışını daha kararlı hale getiren ve görsel engel tasarımlarını iyileştiren bakım sürümüdür.
+
+## Öne çıkan yenilikler
+
+- Seviye geçişinde skor sıfırlama akışı düzeltildi; Seviye 1 sonrası Seviye 2'nin anında tamamlanması giderildi
+- Serbest mod zorluk davranışı sabitlendi; skor arttıkça otomatik zorluk değişimi kapatıldı
+- Bulut üretiminde üst sınır taşması engellendi; engeller artık ekranın üstüne çıkmıyor
+- Seviye 1 bulut aralığı genişletilerek başlangıç deneyimi kolaylaştırıldı
+- Bulut engel piksel-art tasarımı güncellendi; şimşekler bulut içinde ve daha okunabilir şekilde yeniden işlendi
+- Uçak sprite tasarımı gerçek uçak silüetine daha yakın olacak şekilde rafine edildi
+
+## Teknik içerik
+
+- `LevelConfig` yapısına `maxGapMultiplier` parametresi eklendi ve gap tavanı seviyelerden parametrik yönetilir hale getirildi
+- Çarpışma/engel üretim akışında üst sınır güvenliği artırıldı
+- Görsel sprite gridleri yeniden düzenlendi ve assets yeniden üretildi
+
+## Sürüm etiketi
+
+- Release version: v1.0.1
+- Release branch: release/v1.0.1
+
 ## v1.0.0
 
 ## Genel bakış
