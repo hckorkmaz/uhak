@@ -3,6 +3,7 @@ import { useFonts } from 'expo-font';
 import { VT323_400Regular } from '@expo-google-fonts/vt323';
 import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -193,6 +194,25 @@ export default function App() {
       planeVelocity.current = JUMP_STRENGTH;
     }
   }, [gameState]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code === 'Space' || event.key === ' ') {
+        event.preventDefault();
+        jump();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [jump]);
 
   const spawnCloud = useCallback(() => {
     const currentLevelConfig = activeLevelRef.current;
