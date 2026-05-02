@@ -1,113 +1,150 @@
-# UHAK: Bulutların Ötesinde
+<p align="center">
+	<img src="./assets/icon.png" alt="UHAK icon" width="120" />
+</p>
 
-UHAK, piksel sanat estetiğiyle tasarlanmış, refleks ve zamanlama odaklı bir arcade uçuş oyunudur. Oyun artık tek bir Expo tabanlı React Native uygulaması olarak web, Android ve iOS üzerinde çalışır.
+# UHAK: Beyond the Clouds
 
-## Oyun içeriği
+<p align="center">
+	<img src="https://img.shields.io/badge/Expo-55-111111?style=for-the-badge&logo=expo&logoColor=white" alt="Expo 55" />
+	<img src="https://img.shields.io/badge/React_Native-0.83-20232a?style=for-the-badge&logo=react&logoColor=61dafb" alt="React Native 0.83" />
+	<img src="https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iOS-2f7cf6?style=for-the-badge" alt="Platforms" />
+</p>
 
-Oyuncu küçük bir uçağı kontrol ederek bulut engellerinin arasından geçer, çarpışmadan ilerlemeye çalışır ve en yüksek skora ulaşmayı hedefler. Deneyim, klasik arcade hissini mobil uyumlu dokunmatik kontroller ve kısa oturumlarla birleştirir.
+UHAK is a pixel-art arcade flight game focused on reflexes and timing. The project runs as a single Expo-based React Native app across web, Android, and iOS.
 
-### Temel oynanış özellikleri
+<p align="center">
+	<img src="./assets/splash-icon.png" alt="UHAK splash art" width="220" />
+</p>
 
-- Seviyeli ilerleme sistemi
-- Serbest mod ve sonsuz skor akışı
-- Giderek artan zorluk dengesi
-- Bulut engelleri, güvenli geçiş boşlukları ve çarpışma kontrolü
-- Oyun sonu, bölüm tamamlama ve kazanma ekranları
-- Türkçe ve İngilizce dil desteği
-- Kayıtlı en iyi skor ve ilerleme verisi
+## Game Overview
 
-### Tasarım yaklaşımı
+You control a small airplane, navigate through cloud obstacles, avoid collisions, and chase your highest score. The game combines classic arcade pacing with short, mobile-friendly sessions.
 
-- Bütünlüklü piksel-art görsel dil
-- Retro hissi güçlendiren tipografi ve menü yapısı
-- Mobilde hızlı tepki veren sade arayüz
-- Arka plan, uçak, bulut ve oyun ekranlarında ortak sanat yönü
+### Core Gameplay Features
 
-## Teknik yapı ve mimari
+- Level-based progression
+- Free mode with endless score flow
+- Difficulty scaling and obstacle balancing
+- Cloud obstacles, safe passage gaps, and collision checks
+- Game over, level complete, and win states
+- Turkish and English language support
+- Persistent best score and progression data
 
-Uygulama, tek kod tabanından birden fazla platformu hedefleyen modern bir çapraz platform mimariye sahiptir.
+### Visual Direction
 
-- Expo uygulama çalışma zamanı ve araç zinciri olarak kullanılır.
-- React Native, oyun arayüzü ve ekran yapısını oluşturur.
-- React Native Web, aynı deneyimi tarayıcıda sunar.
-- Oyun mantığı platformdan bağımsız olacak şekilde src/game altında tutulur.
-- Görsel bileşenler ve sprite yapıları src/components altında ayrıştırılır.
-- Kalıcı skor ve ilerleme bilgileri cihaz üzerinde saklanır.
+- Cohesive pixel-art visual style
+- Retro typography and menu styling
+- Fast and simple touch-friendly UI
+- Shared art direction across airplane, clouds, background, and screens
 
-## Kullanılan teknolojiler
+## Architecture
 
-### Çekirdek teknolojiler
+The app is built with a single cross-platform codebase.
 
-- Expo 54
-- React 19
-- React Native 0.81
+- Expo provides runtime tooling and platform integration
+- React Native powers app screens and game UI
+- React Native Web delivers the same core experience in browsers
+- Platform-agnostic game logic is isolated under `src/game`
+- Visual/sprite components are organized under `src/components`
+- Local persistence is handled with AsyncStorage
+
+## Tech Stack
+
+### Core
+
+- Expo 55
+- React 19.2
+- React Native 0.83.6
 - React Native Web
 - TypeScript
 
-### Uygulama ve cihaz entegrasyonları
+### Runtime and Integration
 
-- expo-font: oyun içi yazı tiplerinin yüklenmesi
-- expo-status-bar: platform uyumlu durum çubuğu yönetimi
-- react-native-safe-area-context: güvenli alan desteği
-- @react-native-async-storage/async-storage: skor ve ilerleme kaydı
+- `expo-font`
+- `expo-status-bar`
+- `react-native-safe-area-context`
+- `@react-native-async-storage/async-storage`
 
-### Görsel ve üretim araçları
+### Asset and Build Tooling
 
-- @expo-google-fonts/vt323: retro piksel yazı tipi
-- @napi-rs/canvas: ikon ve görsel üretim araçları
-- Expo web export: statik web çıktısı alma
+- `@expo-google-fonts/vt323`
+- `@napi-rs/canvas`
+- Expo web export for static deployment
 
-## Platform desteği
+## Supported Platforms
 
-- Web tarayıcıları
-- Android uygulaması
-- iOS uygulaması
+- Web browsers
+- Android
+- iOS
 
-## Yerel geliştirme
+## Getting Started
 
-Gereksinim: Node.js 18+
+Requirement: Node.js 20+ is recommended (Node.js 18+ minimum).
 
-1. Bağımlılıkları kur:
+1. Install dependencies
 
-   npm install
+```bash
+npm install
+```
 
-2. Geliştirme sunucusunu başlat:
+2. Start development server
 
-   npm run dev
+```bash
+npm run dev
+```
 
-3. Android üzerinde çalıştır:
+3. Run on Android
 
-   npm run android
+```bash
+npm run android
+```
 
-4. iOS üzerinde çalıştır:
+4. Run on iOS
 
-   npm run ios
+```bash
+npm run ios
+```
 
-5. Web sürümünü aç:
+5. Run on web
 
-   npm run web
+```bash
+npm run web
+```
 
-6. Tip kontrolü yap:
+6. Run type checks
 
-   npm run typecheck
+```bash
+npm run typecheck
+```
 
-7. Statik web çıktısı üret:
+7. Build static web output
 
-   npm run build
+```bash
+npm run build
+```
 
-## Proje yapısı
+## Available Scripts
 
-- src/game: oyun kuralları, sabitler, tipler ve motor mantığı
-- src/components: görsel bileşenler, sprite yapıları ve arka plan parçaları
-- App.tsx: ana oyun akışı ve ekran yönetimi
-- app.json: Expo yapılandırması ve platform ayarları
-- tools: varlık üretimi ve web çıktı yardımcı betikleri
-- package.json: komutlar ve proje bağımlılıkları
+- `npm run dev`: start Expo with cleared cache
+- `npm run start`: start Expo
+- `npm run android`: build/run Android app
+- `npm run ios`: build/run iOS app
+- `npm run web`: run web target locally
+- `npm run typecheck`: TypeScript validation
+- `npm run build` / `npm run build:web`: export static web bundle to `dist/`
 
-## Sürüm notları
+## Project Structure
 
-Bu sürüm için detaylı değişiklikler CHANGELOG.md dosyasına eklenmiştir.
+- `App.tsx`: main game flow and screen routing
+- `src/game`: core game engine, constants, types, storage
+- `src/components`: sprites and visual UI components
+- `assets`: images and static visual resources
+- `android`: native Android project
+- `tools`: helper scripts for asset generation and web build path fixes
+- `app.json`: Expo app config
+- `.github/workflows/deploy.yml`: GitHub Pages deployment pipeline
 
-## Not
+## Changelog and Release Notes
 
-Bu depo artık eski Vite merkezli yapının yerine React Native odaklı tekil Expo uygulamasını esas alır.
+- Changelog: `CHANGELOG.md`
+- GitHub Releases: repository Releases page
