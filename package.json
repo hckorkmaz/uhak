@@ -1,15 +1,13 @@
 {
   "name": "uhak",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "main": "index.ts",
   "scripts": {
     "dev": "expo start --clear",
     "start": "expo start",
     "android": "expo run:android",
-    "android:run": "expo run:android",
     "ios": "expo run:ios",
-    "ios:run": "expo run:ios",
     "web": "expo start --web",
     "build": "expo export --platform web && node tools/fix-web-build-paths.mjs",
     "build:web": "expo export --platform web && node tools/fix-web-build-paths.mjs",
@@ -18,19 +16,19 @@
   "dependencies": {
     "@expo-google-fonts/vt323": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "expo": "~54.0.33",
-    "expo-asset": "~12.0.12",
+    "expo": "^55.0.19",
+    "expo-asset": "^55.0.16",
     "expo-font": "^55.0.6",
-    "expo-status-bar": "~3.0.9",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
+    "expo-status-bar": "~55.0.5",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.6",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^0.1.99",
-    "@types/react": "~19.1.0",
+    "@types/react": "~19.2.10",
     "typescript": "~5.9.2"
   }
 }
